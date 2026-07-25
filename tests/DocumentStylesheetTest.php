@@ -15,8 +15,9 @@ final class DocumentStylesheetTest extends TestCase
         $css = DocumentStylesheet::base();
 
         $expected = [
-            // Spacing scale
+            // Spacing scale (incl. half-steps with escaped dots)
             '.p-4',
+            '.p-0\\.5',
             '.mt-8',
             '.px-3',
             '.mb-0',

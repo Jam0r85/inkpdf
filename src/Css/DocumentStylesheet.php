@@ -15,33 +15,35 @@ final class DocumentStylesheet
 {
     /**
      * Tailwind-like spacing scale (px). Matches the default 4px step.
+     * Returned as a list of [step, value] pairs so half-steps stay strings
+     * (PHP casts numeric string keys like "1" to int).
      *
-     * @return array<int|string, string>
+     * @return list<array{0: string, 1: string}>
      */
     private static function spacingScale(): array
     {
         return [
-            0 => '0',
-            0.5 => '2px',
-            1 => '4px',
-            1.5 => '6px',
-            2 => '8px',
-            2.5 => '10px',
-            3 => '12px',
-            3.5 => '14px',
-            4 => '16px',
-            5 => '20px',
-            6 => '24px',
-            7 => '28px',
-            8 => '32px',
-            9 => '36px',
-            10 => '40px',
-            11 => '44px',
-            12 => '48px',
-            14 => '56px',
-            16 => '64px',
-            20 => '80px',
-            24 => '96px',
+            ['0', '0'],
+            ['0.5', '2px'],
+            ['1', '4px'],
+            ['1.5', '6px'],
+            ['2', '8px'],
+            ['2.5', '10px'],
+            ['3', '12px'],
+            ['3.5', '14px'],
+            ['4', '16px'],
+            ['5', '20px'],
+            ['6', '24px'],
+            ['7', '28px'],
+            ['8', '32px'],
+            ['9', '36px'],
+            ['10', '40px'],
+            ['11', '44px'],
+            ['12', '48px'],
+            ['14', '56px'],
+            ['16', '64px'],
+            ['20', '80px'],
+            ['24', '96px'],
         ];
     }
 
@@ -341,10 +343,9 @@ CSS;
 
     private static function spacingUtilities(): string
     {
-        $scale = self::spacingScale();
         $css = ["/* ---- Spacing (padding / margin) ---- */"];
 
-        foreach ($scale as $step => $value) {
+        foreach (self::spacingScale() as [$step, $value]) {
             $name = self::classStep($step);
 
             $css[] = ".p-{$name} { padding: {$value}; }";
@@ -433,8 +434,8 @@ CSS;
         }
 
         // Fixed widths from spacing scale
-        foreach (self::spacingScale() as $step => $value) {
-            if ($step === 0 || $step === 0.0) {
+        foreach (self::spacingScale() as [$step, $value]) {
+            if ($step === '0') {
                 continue;
             }
             $name = self::classStep($step);
@@ -707,23 +708,12 @@ CSS;
     }
 
     /**
-     * CSS class step segment with dots escaped: 0.5 → "0\.5", 1 → "1".
+     * CSS class step segment with dots escaped: "0.5" → "0\.5", "1" → "1".
      * HTML stays `class="p-0.5"`; CSS needs `.p-0\.5`.
      */
-    private static function classStep(int|float|string $step): string
+    private static function classStep(string $step): string
     {
-        if (is_int($step)) {
-            return (string) $step;
-        }
-
-        if (is_float($step)) {
-            $formatted = rtrim(rtrim(sprintf('%.1f', $step), '0'), '.');
-            $formatted = $formatted === '' ? '0' : $formatted;
-
-            return str_replace('.', '\\.', $formatted);
-        }
-
-        return str_replace('.', '\\.', (string) $step);
+        return str_replace('.', '\\.', $step);
     }
 
     /**

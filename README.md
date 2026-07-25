@@ -19,11 +19,11 @@ Built for business documents — invoices, payment advices, statements, letters 
 | Weight / deps | Heavier | Lighter |
 | Best for | Invoices, multi-language docs | Simple HTML receipts |
 
-For PropDesk-style finance docs, **mPDF wins**. Neither replaces Chromium for full Tailwind sites — InkPDF is intentionally document-first.
+For finance-style business documents, **mPDF wins**. Neither replaces Chromium for full Tailwind sites — InkPDF is intentionally document-first.
 
 ## Install
 
-### Private GitHub (PropDesk / apps)
+### Private GitHub
 
 ```bash
 composer config repositories.inkpdf vcs https://github.com/Jam0r85/inkpdf.git
@@ -32,16 +32,14 @@ composer require jam0r85/inkpdf:^0.1
 
 GitHub must be able to access the private repo (SSH key or `composer` GitHub token / `auth.json`).
 
-### Local path (WSL / monorepo-style)
-
-If the package sits next to PropDesk:
+### Local path (sibling package)
 
 ```text
-/home/james/sites/propdesk
-/home/james/sites/inkpdf
+/path/to/your-app
+/path/to/inkpdf
 ```
 
-In PropDesk `composer.json`:
+In your app `composer.json`:
 
 ```json
 {
@@ -76,7 +74,7 @@ $pdf = InkPdf::loadHtml($html)
     ->setPaper('A4')
     ->setMargins(12)
     // Inter is the default — no need to setDefaultFont unless you want something else
-    ->setMeta(title: 'Invoice INV-1001', author: 'PropDesk')
+    ->setMeta(title: 'Invoice INV-1001', author: 'Acme Ltd')
     ->addFont('Brand', resource_path('fonts/Brand-Regular.ttf'))
     ->addFont('Brand', resource_path('fonts/Brand-Bold.ttf'), weight: 'bold');
 
@@ -244,9 +242,9 @@ composer example:payment-advice
 composer test
 ```
 
-## PropDesk
+## Using in a Laravel app
 
-Keep Blade/Twig templates and business data in PropDesk. Depend on this package only for HTML → PDF rendering:
+Keep Blade templates and business data in your application. Depend on this package only for HTML → PDF rendering:
 
 ```php
 // app/Services/DocumentPdf.php
@@ -261,7 +259,7 @@ final class DocumentPdf
         return InkPdf::loadHtml($html)
             ->setPaper('A4')
             ->withDocumentStyles()
-            ->setMeta(title: "Invoice {$number}", author: 'PropDesk')
+            ->setMeta(title: "Invoice {$number}", author: 'Acme Ltd')
             ->output();
     }
 }

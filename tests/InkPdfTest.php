@@ -36,7 +36,7 @@ final class InkPdfTest extends TestCase
         $this->assertStringStartsWith('%PDF', $pdf);
     }
 
-    public function test_saves_invoice_template(): void
+    public function test_saves_invoice_with_document_styles(): void
     {
         $template = dirname(__DIR__) . '/resources/templates/invoice.html';
         $path = $this->outputDir . '/invoice.pdf';
@@ -45,6 +45,8 @@ final class InkPdfTest extends TestCase
             ->setPaper('A4', 'portrait')
             ->setMargins(['top' => 12, 'right' => 12, 'bottom' => 12, 'left' => 12])
             ->setDefaultFont('DejaVu Sans', 10)
+            ->withDocumentStyles()
+            ->withBrand(['ink' => '0f172a'])
             ->save($path);
 
         $this->assertSame($path, $saved);
@@ -60,10 +62,28 @@ final class InkPdfTest extends TestCase
 
         InkPdf::loadFile($template)
             ->setPaper(PaperSize::A4, Orientation::Portrait)
+            ->withDocumentStyles()
             ->save($path);
 
         $this->assertFileExists($path);
         $this->assertStringStartsWith('%PDF', (string) file_get_contents($path));
+    }
+
+    public function test_add_stylesheet_and_normalize_toggle(): void
+    {
+        $html = <<<'HTML'
+<html><head><style>
+:root { --c: #b91c1c; }
+.x { color: var(--c); display: flex; }
+</style></head><body><p class="x">Hi</p></body></html>
+HTML;
+
+        $pdf = InkPdf::loadHtml($html)
+            ->addStylesheet('.x { font-weight: bold; }')
+            ->normalizeCss(true)
+            ->output();
+
+        $this->assertStringStartsWith('%PDF', $pdf);
     }
 
     public function test_rejects_empty_html(): void

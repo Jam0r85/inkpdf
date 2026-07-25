@@ -12,6 +12,8 @@ final class DocumentOptions
     /**
      * @param  array{top: float, right: float, bottom: float, left: float}  $marginsMm
      * @param  list<FontFace>  $fonts
+     * @param  list<string>  $stylesheets  Extra CSS strings injected before render
+     * @param  array{ink?: string, primary?: string, success?: string, muted?: string, border?: string}|null  $brand
      */
     public function __construct(
         public PaperSize $paper = PaperSize::A4,
@@ -30,6 +32,10 @@ final class DocumentOptions
         public ?string $author = null,
         public ?string $subject = null,
         public bool $showImageErrors = false,
+        public bool $useDocumentStyles = false,
+        public bool $normalizeCss = true,
+        public array $stylesheets = [],
+        public ?array $brand = null,
     ) {
         if ($this->tempDir === '') {
             $this->tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'inkpdf';
@@ -97,6 +103,42 @@ final class DocumentOptions
     {
         $clone = clone $this;
         $clone->fonts[] = $font;
+
+        return $clone;
+    }
+
+    public function withDocumentStyles(bool $enabled = true): self
+    {
+        $clone = clone $this;
+        $clone->useDocumentStyles = $enabled;
+
+        return $clone;
+    }
+
+    public function withNormalizeCss(bool $enabled = true): self
+    {
+        $clone = clone $this;
+        $clone->normalizeCss = $enabled;
+
+        return $clone;
+    }
+
+    public function withStylesheet(string $css): self
+    {
+        $clone = clone $this;
+        $clone->stylesheets[] = $css;
+
+        return $clone;
+    }
+
+    /**
+     * @param  array{ink?: string, primary?: string, success?: string, muted?: string, border?: string}  $brand
+     */
+    public function withBrand(array $brand): self
+    {
+        $clone = clone $this;
+        $clone->brand = $brand;
+        $clone->useDocumentStyles = true;
 
         return $clone;
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace InkPdf;
 
 use InkPdf\Contracts\PdfRenderer;
+use InkPdf\Css\DocumentStylesheet;
 use InkPdf\Exceptions\InkPdfException;
 use InkPdf\Renderer\MpdfRenderer;
 
@@ -106,6 +107,66 @@ final class PdfDocument
         return $this;
     }
 
+    /**
+     * Inject InkPDF's print-safe utility stylesheet (tables, type, spacing, badges…).
+     */
+    public function withDocumentStyles(bool $enabled = true): self
+    {
+        $this->options = $this->options->withDocumentStyles($enabled);
+
+        return $this;
+    }
+
+    /**
+     * Expand CSS variables, modern colours, and strip unsupported rules before render.
+     * On by default.
+     */
+    public function normalizeCss(bool $enabled = true): self
+    {
+        $this->options = $this->options->withNormalizeCss($enabled);
+
+        return $this;
+    }
+
+    /**
+     * Append a raw CSS stylesheet (string) into the document head.
+     */
+    public function addStylesheet(string $css): self
+    {
+        $this->options = $this->options->withStylesheet($css);
+
+        return $this;
+    }
+
+    /**
+     * Load CSS from a file path.
+     */
+    public function addStylesheetFile(string $path): self
+    {
+        if (! is_file($path)) {
+            throw new InkPdfException("Stylesheet not found: {$path}");
+        }
+
+        $css = file_get_contents($path);
+        if ($css === false) {
+            throw new InkPdfException("Unable to read stylesheet: {$path}");
+        }
+
+        return $this->addStylesheet($css);
+    }
+
+    /**
+     * Apply brand colour overrides and enable document styles.
+     *
+     * @param  array{ink?: string, primary?: string, success?: string, muted?: string, border?: string}  $brand
+     */
+    public function withBrand(array $brand): self
+    {
+        $this->options = $this->options->withBrand($brand);
+
+        return $this;
+    }
+
     public function options(): DocumentOptions
     {
         return $this->options;
@@ -179,6 +240,19 @@ final class PdfDocument
 
         echo $pdf;
         exit;
+    }
+
+    /**
+     * Exposed for tests / debugging: document styles CSS string.
+     */
+    public static function documentCss(?array $brand = null): string
+    {
+        $css = DocumentStylesheet::base();
+        if ($brand !== null) {
+            $css .= "\n" . DocumentStylesheet::brand($brand);
+        }
+
+        return $css;
     }
 
     private function assertHasHtml(): void

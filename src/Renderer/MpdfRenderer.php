@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace InkPdf\Renderer;
 
 use InkPdf\Contracts\PdfRenderer;
+use InkPdf\Css\DocumentStylesheet;
+use InkPdf\Css\HtmlStyler;
 use InkPdf\DocumentOptions;
 use InkPdf\Exceptions\RenderException;
 use InkPdf\FontFace;
@@ -22,9 +24,20 @@ use Mpdf\Output\Destination;
  */
 final class MpdfRenderer implements PdfRenderer
 {
+    public function __construct(
+        private readonly HtmlStyler $styler = new HtmlStyler(),
+    ) {
+    }
+
     public function render(string $html, DocumentOptions $options): string
     {
         try {
+            $html = $this->styler->apply(
+                $html,
+                $this->collectStylesheets($options),
+                $options->normalizeCss,
+            );
+
             $mpdf = $this->createMpdf($options);
 
             if ($options->title !== null) {
@@ -54,6 +67,27 @@ final class MpdfRenderer implements PdfRenderer
         }
     }
 
+    /**
+     * @return list<string>
+     */
+    private function collectStylesheets(DocumentOptions $options): array
+    {
+        $sheets = [];
+
+        if ($options->useDocumentStyles) {
+            $sheets[] = DocumentStylesheet::base();
+            if ($options->brand !== null) {
+                $sheets[] = DocumentStylesheet::brand($options->brand);
+            }
+        }
+
+        foreach ($options->stylesheets as $css) {
+            $sheets[] = $css;
+        }
+
+        return $sheets;
+    }
+
     private function createMpdf(DocumentOptions $options): Mpdf
     {
         if (! is_dir($options->tempDir) && ! mkdir($options->tempDir, 0775, true) && ! is_dir($options->tempDir)) {
@@ -81,6 +115,14 @@ final class MpdfRenderer implements PdfRenderer
             'showImageErrors' => $options->showImageErrors,
             'fontDir' => array_merge($defaultConfig['fontDir'], $fontDirs),
             'fontdata' => $fontData + $defaultFontConfig['fontdata'],
+            // Slightly better CSS/layout defaults for documents
+            'useSubstitutions' => true,
+            'simpleTables' => false,
+            'packTableData' => true,
+            'shrink_tables_to_fit' => 1,
+            'use_kwt' => true,
+            'autoLangToFont' => false,
+            'autoScriptToLang' => false,
         ];
 
         return new Mpdf($config);

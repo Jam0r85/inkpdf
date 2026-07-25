@@ -123,24 +123,80 @@ In CSS / HTML:
 
 Supported files: `.ttf`, `.otf`, `.ttc`.
 
-## Supported HTML/CSS (practical)
+## CSS: what we improve on top of mPDF
+
+mPDF is not a browser — **no real flex/grid**. InkPDF makes documents look modern *within those limits*:
+
+### 1. Document utility stylesheet (optional)
+
+```php
+InkPdf::loadHtml($html)
+    ->withDocumentStyles()
+    ->withBrand(['ink' => '0f172a', 'primary' => '1d4ed8'])
+    ->output();
+```
+
+Gives you print-safe utilities similar to a tiny Tailwind for PDFs:
+
+| Category | Examples |
+|----------|----------|
+| Type | `text-sm`, `text-xl`, `font-bold`, `text-muted`, `text-right` |
+| Colour | `text-ink`, `bg-slate`, `bg-success`, `badge-success` |
+| Space | `p-3`, `mt-4`, `mb-2`, `px-4` |
+| Width | `w-full`, `w-1-2`, `w-45`, `w-55` |
+| Tables | `table-lines`, `table-bordered`, `table-zebra`, `totals`, `num` |
+| Layout | `cols` (2-column **table** layout), `panel`, `footer-note` |
+| Page | `page-break`, `avoid-break`, `keep-together` |
+
+Two-column layouts use tables, not flex:
+
+```html
+<table class="cols">
+  <tr>
+    <td class="w-1-2">Left</td>
+    <td class="w-1-2 text-right">Right</td>
+  </tr>
+</table>
+```
+
+### 2. CSS normalizer (on by default)
+
+Before render, InkPDF rewrites common modern CSS so mPDF accepts it:
+
+- `var(--token)` / `:root` custom properties → expanded values  
+- `rgb(15 23 42)` / `rgb(... / 0.5)` → classic `rgb()` (alpha blended on white)  
+- simple `hsl(...)` / pragmatic `oklch(...)` → `rgb()`  
+- strips flex/grid-only props (`gap`, `justify-content`, …)  
+- maps `display: flex|grid` → `block` (layout still needs tables)
+
+```php
+->normalizeCss(true)   // default
+->normalizeCss(false)  // raw CSS only
+```
+
+### 3. Extra stylesheets
+
+```php
+->addStylesheet('.total { font-size: 14pt; }')
+->addStylesheetFile(resource_path('css/pdf-brand.css'))
+```
+
+### Supported vs avoid
 
 **Works well**
 
-- Block layout, paragraphs, headings
-- Tables (`colspan`, `rowspan`, borders, widths, `thead`)
-- Images (`src` path or data URI)
-- Inline styles + `<style>` blocks
-- Font size/family/weight, colors, borders, padding, margins
-- Page breaks: `page-break-before/after`, `pagebreak`
-- `@page` / mPDF header-footer patterns
+- Block layout, paragraphs, headings  
+- Tables (`colspan`, `rowspan`, borders, widths, `thead`)  
+- Images (`src` path or data URI)  
+- Font size/family/weight, colours, borders, padding, margins  
+- Page breaks, `@page` / mPDF headers & footers  
+- InkPDF utilities + normalized modern colour/vars  
 
-**Avoid / limited**
+**Avoid**
 
-- Flexbox, Grid, floats for complex layout
-- CSS variables, modern color functions (`oklch`)
-- JavaScript
-- Full Tailwind utility sheets (use tables + a small print stylesheet instead)
+- Real flexbox / grid layouts  
+- Full Tailwind builds (use `withDocumentStyles()` utilities instead)  
+- Filters, transforms, animations, JS  
 
 See `resources/templates/` for invoice and payment-advice examples.
 
@@ -156,6 +212,10 @@ See `resources/templates/` for invoice and payment-advice examples.
 | `->addFont($family, $path, $style='normal', $weight='normal')` | Embed TTF/OTF |
 | `->setMeta(title:, author:, subject:)` | PDF metadata |
 | `->setTempDir($path)` | mPDF temp (writable) |
+| `->withDocumentStyles()` | Inject print utility CSS |
+| `->withBrand([...])` | Brand colours + enable document styles |
+| `->addStylesheet($css)` / `->addStylesheetFile($path)` | Extra CSS |
+| `->normalizeCss(bool)` | Modern CSS downlevel (default on) |
 | `->output()` | `string` PDF bytes |
 | `->save($path)` | Write file, return path |
 | `->download($filename)` / `->stream($filename)` | HTTP helpers |

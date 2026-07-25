@@ -23,14 +23,11 @@ For finance-style business documents, **mPDF wins**. Neither replaces Chromium f
 
 ## Install
 
-### Private GitHub
-
 ```bash
-composer config repositories.inkpdf vcs https://github.com/Jam0r85/inkpdf.git
-composer require jam0r85/inkpdf:^0.1
+composer require jam0r85/inkpdf:^1.0
 ```
 
-GitHub must be able to access the private repo (SSH key or `composer` GitHub token / `auth.json`).
+Requires **PHP 8.2+** and the **mbstring** extension. [mPDF](https://mpdf.github.io/) is pulled in automatically.
 
 ### Local path (sibling package)
 

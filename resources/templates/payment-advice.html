@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 10pt;
+            color: #111827;
+            line-height: 1.4;
+        }
+        .muted { color: #6b7280; }
+        .right { text-align: right; }
+        .bold { font-weight: bold; }
+        h1 {
+            font-size: 18pt;
+            margin: 0 0 4px 0;
+            color: #0f172a;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        .meta td { vertical-align: top; padding: 2px 0; }
+        .box {
+            border: 1px solid #e5e7eb;
+            background: #f8fafc;
+            padding: 12px 14px;
+            margin-top: 18px;
+        }
+        .box .label {
+            font-size: 8pt;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: bold;
+        }
+        .box .value {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        .lines th {
+            text-align: left;
+            border-bottom: 2px solid #0f172a;
+            padding: 8px 6px;
+            font-size: 9pt;
+        }
+        .lines td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .lines .num { text-align: right; white-space: nowrap; }
+        .footer {
+            margin-top: 28px;
+            font-size: 8.5pt;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <table class="meta">
+        <tr>
+            <td width="60%">
+                <h1>Payment advice</h1>
+                <div class="muted">PropDesk Property Management</div>
+                <div class="muted">12 High Street, Birmingham, B1 1AA</div>
+            </td>
+            <td width="40%" class="right">
+                <div><span class="muted">Advice no.</span> <span class="bold">PA-2044</span></div>
+                <div><span class="muted">Date</span> 25 Jul 2026</div>
+                <div><span class="muted">Landlord</span> Oak Holdings Ltd</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="box">
+        <table>
+            <tr>
+                <td width="50%">
+                    <div class="label">Net payment</div>
+                    <div class="value">£2,418.50</div>
+                </td>
+                <td width="50%">
+                    <div class="label">Payment method / ref</div>
+                    <div class="bold" style="margin-top: 6px;">BACS · PA-2044</div>
+                    <div class="muted">Expected in account within 2 working days</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <p style="margin-top: 20px;">
+        Please find below a breakdown of monies received and deductions for the period
+        <span class="bold">1 Jul 2026 – 31 Jul 2026</span> relating to your portfolio.
+    </p>
+
+    <table class="lines" style="margin-top: 10px;">
+        <thead>
+            <tr>
+                <th width="46%">Description</th>
+                <th width="24%">Property</th>
+                <th width="15%" class="num">Received</th>
+                <th width="15%" class="num">Deduction</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Tenant rent — Alex Tenant</td>
+                <td>Flat 2, 14 Oak Road</td>
+                <td class="num">£950.00</td>
+                <td class="num">—</td>
+            </tr>
+            <tr>
+                <td>Tenant rent — Sam Rivers</td>
+                <td>22 Birch Close</td>
+                <td class="num">£1,200.00</td>
+                <td class="num">—</td>
+            </tr>
+            <tr>
+                <td>Management fee (10%)</td>
+                <td>Portfolio</td>
+                <td class="num">—</td>
+                <td class="num">£215.00</td>
+            </tr>
+            <tr>
+                <td>Maintenance — boiler service</td>
+                <td>22 Birch Close</td>
+                <td class="num">—</td>
+                <td class="num">£96.50</td>
+            </tr>
+            <tr>
+                <td>Tenant deposit interest retained</td>
+                <td>Flat 2, 14 Oak Road</td>
+                <td class="num">£0.00</td>
+                <td class="num">—</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table style="width: 50%; margin-left: auto; margin-top: 14px;">
+        <tr>
+            <td class="muted">Total received</td>
+            <td class="right">£2,150.00</td>
+        </tr>
+        <tr>
+            <td class="muted">Total deductions</td>
+            <td class="right">£311.50</td>
+        </tr>
+        <tr>
+            <td class="bold" style="padding-top: 8px; border-top: 2px solid #0f172a;">Net payment</td>
+            <td class="right bold" style="padding-top: 8px; border-top: 2px solid #0f172a;">£1,838.50</td>
+        </tr>
+        <tr>
+            <td class="muted" style="padding-top: 6px;">Adjustment / arrears cleared</td>
+            <td class="right" style="padding-top: 6px;">£580.00</td>
+        </tr>
+        <tr>
+            <td class="bold">Amount paid</td>
+            <td class="right bold">£2,418.50</td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        This advice is for information only and does not replace your monthly statement.
+        Queries: accounts@propdesk.example · PropDesk Ltd · Company no. 12345678
+    </div>
+</body>
+</html>

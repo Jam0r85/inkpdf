@@ -1,0 +1,14 @@
+/vendor/
+/composer.lock
+/composer.phar
+/.phpunit.cache/
+/phpunit.xml.bak
+/examples/output/
+/tests/output/
+*.pdf
+!.gitkeep
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

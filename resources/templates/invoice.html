@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 10pt;
+            color: #111827;
+            line-height: 1.4;
+        }
+        .muted { color: #6b7280; }
+        .right { text-align: right; }
+        .bold { font-weight: bold; }
+        h1 {
+            font-size: 20pt;
+            margin: 0 0 4px 0;
+            color: #0f172a;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        .meta td { vertical-align: top; padding: 2px 0; }
+        .items th {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 8px 6px;
+            font-size: 9pt;
+            text-align: left;
+        }
+        .items td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+        .items .num { text-align: right; white-space: nowrap; }
+        .totals {
+            width: 45%;
+            margin-left: auto;
+            margin-top: 12px;
+        }
+        .totals td { padding: 4px 6px; }
+        .totals .grand td {
+            border-top: 2px solid #0f172a;
+            font-weight: bold;
+            font-size: 11pt;
+            padding-top: 8px;
+        }
+        .footer {
+            margin-top: 28px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 8.5pt;
+            color: #6b7280;
+        }
+        .badge {
+            display: inline-block;
+            background: #ecfdf5;
+            color: #047857;
+            padding: 3px 8px;
+            font-size: 8.5pt;
+            font-weight: bold;
+            border: 1px solid #a7f3d0;
+        }
+    </style>
+</head>
+<body>
+    <table class="meta">
+        <tr>
+            <td width="55%">
+                <h1>INVOICE</h1>
+                <div class="muted">PropDesk Property Management</div>
+                <div class="muted">12 High Street, Birmingham, B1 1AA</div>
+                <div class="muted">accounts@propdesk.example</div>
+            </td>
+            <td width="45%" class="right">
+                <div class="badge">PAID</div>
+                <div style="margin-top: 10px;">
+                    <div><span class="muted">Invoice</span> <span class="bold">INV-1001</span></div>
+                    <div><span class="muted">Issue date</span> 25 Jul 2026</div>
+                    <div><span class="muted">Due date</span> 8 Aug 2026</div>
+                    <div><span class="muted">Property</span> Flat 2, 14 Oak Road</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="meta" style="margin-top: 22px;">
+        <tr>
+            <td width="50%">
+                <div class="muted bold" style="font-size: 8pt; letter-spacing: 0.04em;">BILL TO</div>
+                <div class="bold">Alex Tenant</div>
+                <div>Flat 2, 14 Oak Road</div>
+                <div>Birmingham, B15 2TT</div>
+                <div>alex.tenant@example.com</div>
+            </td>
+            <td width="50%">
+                <div class="muted bold" style="font-size: 8pt; letter-spacing: 0.04em;">PAYMENT TO</div>
+                <div class="bold">PropDesk Ltd</div>
+                <div>Sort code 20-00-00</div>
+                <div>Account 12345678</div>
+                <div>Ref: INV-1001</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="items" style="margin-top: 24px;">
+        <thead>
+            <tr>
+                <th width="48%">Description</th>
+                <th width="14%">Period</th>
+                <th width="12%" class="num">Qty</th>
+                <th width="13%" class="num">Unit</th>
+                <th width="13%" class="num">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="bold">Rent</div>
+                    <div class="muted">Assured shorthold tenancy</div>
+                </td>
+                <td>Aug 2026</td>
+                <td class="num">1</td>
+                <td class="num">£950.00</td>
+                <td class="num">£950.00</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="bold">Service charge</div>
+                    <div class="muted">Communal cleaning &amp; grounds</div>
+                </td>
+                <td>Aug 2026</td>
+                <td class="num">1</td>
+                <td class="num">£45.00</td>
+                <td class="num">£45.00</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="bold">Parking space</div>
+                    <div class="muted">Bay 12</div>
+                </td>
+                <td>Aug 2026</td>
+                <td class="num">1</td>
+                <td class="num">£30.00</td>
+                <td class="num">£30.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tr>
+            <td class="muted">Subtotal</td>
+            <td class="right">£1,025.00</td>
+        </tr>
+        <tr>
+            <td class="muted">VAT (0%)</td>
+            <td class="right">£0.00</td>
+        </tr>
+        <tr class="grand">
+            <td>Total due</td>
+            <td class="right">£1,025.00</td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        <div>Payment terms: 14 days from issue date. Please use the invoice number as your payment reference.</div>
+        <div style="margin-top: 4px;">PropDesk Ltd · Company no. 12345678 · VAT no. GB123456789</div>
+    </div>
+</body>
+</html>

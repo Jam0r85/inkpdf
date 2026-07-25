@@ -1,0 +1,53 @@
+{
+    "name": "jam0r85/inkpdf",
+    "description": "Document-focused HTML to PDF for PHP — invoices, payment advices, and business documents with first-class font support.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "pdf",
+        "html-to-pdf",
+        "invoice",
+        "document",
+        "mpdf",
+        "payment-advice"
+    ],
+    "authors": [
+        {
+            "name": "James Morris",
+            "homepage": "https://github.com/Jam0r85"
+        }
+    ],
+    "homepage": "https://github.com/Jam0r85/inkpdf",
+    "support": {
+        "issues": "https://github.com/Jam0r85/inkpdf/issues",
+        "source": "https://github.com/Jam0r85/inkpdf"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-mbstring": "*",
+        "mpdf/mpdf": "^8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "InkPdf\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "InkPdf\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "example:invoice": "php examples/generate-invoice.php",
+        "example:payment-advice": "php examples/generate-payment-advice.php"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}

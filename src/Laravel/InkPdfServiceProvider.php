@@ -63,8 +63,6 @@ final class InkPdfServiceProvider extends ServiceProvider
             ->setDefaultFont(
                 (string) ($options['default_font'] ?? $cfg['default_font'] ?? 'Inter'),
                 (float) ($options['font_size'] ?? $cfg['default_font_size'] ?? 11),
-=======
-                (float) ($options['font_size'] ?? $cfg['default_font_size'] ?? 11),
             )
             ->setMaxPages((int) ($options['max_pages'] ?? $cfg['max_pages'] ?? 100))
             ->setDebug((bool) ($options['debug'] ?? $cfg['debug'] ?? false));

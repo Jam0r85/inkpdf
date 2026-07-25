@@ -15,7 +15,9 @@ return [
     */
     'default_font' => env('INKPDF_DEFAULT_FONT', 'Inter'),
 
-    'default_font_size' => (float) env('INKPDF_DEFAULT_FONT_SIZE', 10),
+    'default_font_size', 11),
+=======
+    'default_font_size' => (float) env('INKPDF_DEFAULT_FONT_SIZE', 11),
 
     /*
     |--------------------------------------------------------------------------

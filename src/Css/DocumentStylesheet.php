@@ -194,7 +194,7 @@ final class DocumentStylesheet
 
 body {
     font-family: Inter, DejaVu Sans, sans-serif;
-    font-size: 10pt;
+    font-size: 11pt;
     line-height: 1.45;
     color: #111827;
     margin: 0;
@@ -237,17 +237,18 @@ CSS;
 
     private static function typographyUtilities(): string
     {
+        // Align with 11pt body default on main; scale steps upward from there.
         $sizes = [
             'xs' => '8pt',
             'sm' => '9pt',
-            'base' => '10pt',
-            'md' => '11pt', // InkPDF alias (not Tailwind)
-            'lg' => '12pt',
-            'xl' => '14pt',
-            '2xl' => '16pt',
-            '3xl' => '20pt',
-            '4xl' => '24pt',
-            '5xl' => '30pt',
+            'base' => '11pt',
+            'md' => '12pt', // InkPDF alias (not Tailwind)
+            'lg' => '13pt',
+            'xl' => '16pt',
+            '2xl' => '20pt',
+            '3xl' => '24pt',
+            '4xl' => '28pt',
+            '5xl' => '32pt',
             '6xl' => '36pt',
         ];
 

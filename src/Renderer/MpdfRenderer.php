@@ -123,7 +123,9 @@ final class MpdfRenderer implements PdfRenderer
             'fontdata' => $fontData + $defaultFontConfig['fontdata'],
             'useSubstitutions' => true,
             'simpleTables' => false,
-            'packTableData' => true,
+            // packTableData=true stores cells as packed ints; mPDF then does $cell['borderbin']
+            // on an int under PHP 8+ → "Trying to access array offset on int" (Laravel = 500).
+            'packTableData' => false,
             // 0 = never shrink tables (shrink loops can create blank pages)
             'shrink_tables_to_fit' => 0,
             // keep-with-table can page-break-loop on complex float/table hybrids

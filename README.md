@@ -141,28 +141,32 @@ InkPdf::loadHtml($html)
     ->output();
 ```
 
-Gives you print-safe utilities similar to a tiny Tailwind for PDFs:
+Gives you print-safe utilities with **Tailwind-compatible class names** (mPDF-safe subset):
 
 | Category | Examples |
 |----------|----------|
-| Type | `text-sm`, `text-xl`, `font-bold`, `text-muted`, `text-right` |
-| Colour | `text-ink`, `bg-slate`, `bg-success`, `badge-success` |
-| Space | `p-3`, `mt-4`, `mb-2`, `px-4` |
-| Width | `w-full`, `w-1-2`, `w-45`, `w-55` |
+| Type | `text-xs`…`text-6xl`, `font-medium`/`semibold`/`bold`, `leading-*`, `tracking-*`, `uppercase` |
+| Colour | Full scales: `text-slate-500`, `bg-blue-700`, `border-red-200` (+ semantic `text-muted`, `bg-success`) |
+| Space | Full scale `p-*` / `px-*` / `py-*` / `pt|pr|pb|pl-*` and matching margins `m-*` / `mt-*`… (0–24) |
+| Width | `w-full`, `w-1/2` (also `w-1-2`), `w-1/3`, `w-2/3`, `w-45`, `w-55`, fixed `w-4`… |
+| Borders | `border`, `border-t/r/b/l`, `border-2`, `rounded`, `rounded-lg`, `rounded-full` |
+| Display | `block`, `inline-block`, `hidden` (**not** flex/grid) |
 | Tables | `table-lines`, `table-bordered`, `table-zebra`, `totals`, `num` |
-| Layout | `cols` (2-column **table** layout), `panel`, `footer-note` |
-| Page | `page-break`, `avoid-break`, `keep-together` |
+| Layout | `cols` (2-column **table** layout), `stack`, `panel`, `badge-*`, `footer-note` |
+| Page | `page-break`, `break-inside-avoid`, `keep-together` |
 
 Two-column layouts use tables, not flex:
 
 ```html
 <table class="cols">
   <tr>
-    <td class="w-1-2">Left</td>
-    <td class="w-1-2 text-right">Right</td>
+    <td class="w-1/2 p-2">Left</td>
+    <td class="w-1/2 p-2 text-right text-slate-500">Right</td>
   </tr>
 </table>
 ```
+
+**Not supported** (mPDF limits): real `flex` / `grid`, `gap`, modern shadow stacks, transforms, arbitrary values beyond a few widths, and most interactive states (`hover:`, `focus:`).
 
 ### 2. CSS normalizer (on by default)
 

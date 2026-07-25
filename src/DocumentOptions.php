@@ -29,7 +29,7 @@ final class DocumentOptions
         /** Space reserved for mPDF HTML page headers (mm from page edge). */
         public float $marginHeaderMm = 8.0,
         public string $defaultFont = 'Inter',
-        public float $defaultFontSize = 10.0,
+        public float $defaultFontSize = 11.0,
         public string $tempDir = '',
         public array $fonts = [],
         public ?string $title = null,

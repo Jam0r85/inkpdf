@@ -62,7 +62,9 @@ final class InkPdfServiceProvider extends ServiceProvider
             ->setHeaderMargin((float) ($options['margin_header'] ?? $cfg['margin_header'] ?? 10))
             ->setDefaultFont(
                 (string) ($options['default_font'] ?? $cfg['default_font'] ?? 'Inter'),
-                (float) ($options['font_size'] ?? $cfg['default_font_size'] ?? 10),
+                (float) ($options['font_size'] ?? $cfg['default_font_size'] ?? 11),
+=======
+                (float) ($options['font_size'] ?? $cfg['default_font_size'] ?? 11),
             )
             ->setMaxPages((int) ($options['max_pages'] ?? $cfg['max_pages'] ?? 100))
             ->setDebug((bool) ($options['debug'] ?? $cfg['debug'] ?? false));

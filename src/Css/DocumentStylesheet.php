@@ -20,7 +20,7 @@ final class DocumentStylesheet
 
 body {
     font-family: Inter, DejaVu Sans, sans-serif;
-    font-size: 10pt;
+    font-size: 11pt;
     line-height: 1.45;
     color: #111827;
     margin: 0;
@@ -62,8 +62,8 @@ hr {
 /* ---- Typography ---- */
 .text-xs   { font-size: 8pt; }
 .text-sm   { font-size: 9pt; }
-.text-base { font-size: 10pt; }
-.text-md   { font-size: 11pt; }
+.text-base { font-size: 11pt; }
+.text-md   { font-size: 12pt; }
 .text-lg   { font-size: 13pt; }
 .text-xl   { font-size: 16pt; }
 .text-2xl  { font-size: 20pt; }

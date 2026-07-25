@@ -124,8 +124,10 @@ final class MpdfRenderer implements PdfRenderer
             'useSubstitutions' => true,
             'simpleTables' => false,
             'packTableData' => true,
-            'shrink_tables_to_fit' => 1,
-            'use_kwt' => true,
+            // 0 = never shrink tables (shrink loops can create blank pages)
+            'shrink_tables_to_fit' => 0,
+            // keep-with-table can page-break-loop on complex float/table hybrids
+            'use_kwt' => false,
             'autoLangToFont' => false,
             'autoScriptToLang' => false,
         ];

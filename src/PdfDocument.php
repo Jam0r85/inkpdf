@@ -70,6 +70,26 @@ final class PdfDocument
         return $this;
     }
 
+    /**
+     * Margin reserved for mPDF HTML page footers (from the bottom edge of the page).
+     */
+    public function setFooterMargin(float $mm): self
+    {
+        $this->options = $this->options->withFooterMargin($mm);
+
+        return $this;
+    }
+
+    /**
+     * Margin reserved for mPDF HTML page headers (from the top edge of the page).
+     */
+    public function setHeaderMargin(float $mm): self
+    {
+        $this->options = $this->options->withHeaderMargin($mm);
+
+        return $this;
+    }
+
     public function setDefaultFont(string $family, ?float $sizePt = null): self
     {
         $this->options = $this->options->withDefaultFont($family, $sizePt);

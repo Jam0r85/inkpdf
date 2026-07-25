@@ -24,6 +24,10 @@ final class DocumentOptions
             'bottom' => 15.0,
             'left' => 15.0,
         ],
+        /** Space reserved for mPDF HTML page footers (mm from page edge). */
+        public float $marginFooterMm = 8.0,
+        /** Space reserved for mPDF HTML page headers (mm from page edge). */
+        public float $marginHeaderMm = 8.0,
         public string $defaultFont = 'Inter',
         public float $defaultFontSize = 10.0,
         public string $tempDir = '',
@@ -103,6 +107,22 @@ final class DocumentOptions
     {
         $clone = clone $this;
         $clone->fonts[] = $font;
+
+        return $clone;
+    }
+
+    public function withFooterMargin(float $mm): self
+    {
+        $clone = clone $this;
+        $clone->marginFooterMm = $mm;
+
+        return $clone;
+    }
+
+    public function withHeaderMargin(float $mm): self
+    {
+        $clone = clone $this;
+        $clone->marginHeaderMm = $mm;
 
         return $clone;
     }

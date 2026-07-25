@@ -112,6 +112,33 @@ final class PdfDocument
     }
 
     /**
+     * Abort when the PDF exceeds this many pages (layout-loop guard). 0 disables.
+     */
+    public function setMaxPages(int $maxPages): self
+    {
+        $this->options = $this->options->withMaxPages($maxPages);
+
+        return $this;
+    }
+
+    /**
+     * On failure, write the HTML payload under the debug path and include it in the error.
+     */
+    public function setDebug(bool $enabled = true): self
+    {
+        $this->options = $this->options->withDebug($enabled);
+
+        return $this;
+    }
+
+    public function setDebugPath(string $path): self
+    {
+        $this->options = $this->options->withDebug(true, $path);
+
+        return $this;
+    }
+
+    /**
      * Register a TTF/OTF font for use in CSS font-family.
      *
      * @param  string|int  $weight  e.g. 'normal', 'bold', 400, 700

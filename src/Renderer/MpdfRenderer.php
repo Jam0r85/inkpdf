@@ -19,9 +19,6 @@ use Mpdf\Output\Destination;
 
 /**
  * mPDF-backed HTML → PDF renderer.
- *
- * Chosen over dompdf for stronger Unicode, font embedding, and table-heavy
- * business documents (invoices, payment advices, statements).
  */
 final class MpdfRenderer implements PdfRenderer
 {
@@ -32,12 +29,15 @@ final class MpdfRenderer implements PdfRenderer
 
     public function render(string $html, DocumentOptions $options): string
     {
+        $prepared = $html;
+
         try {
-            $html = $this->styler->apply(
+            $prepared = $this->styler->apply(
                 $html,
                 $this->collectStylesheets($options),
                 $options->normalizeCss,
             );
+            $prepared = $this->sanitiseImages($prepared);
 
             $mpdf = $this->createMpdf($options);
 
@@ -51,21 +51,123 @@ final class MpdfRenderer implements PdfRenderer
                 $mpdf->SetSubject($options->subject);
             }
 
-            $mpdf->WriteHTML($html);
+            $mpdf->WriteHTML($prepared);
 
             $output = $mpdf->Output('', Destination::STRING_RETURN);
             if (! is_string($output) || $output === '') {
                 throw new RenderException('mPDF returned an empty PDF.');
             }
 
+            $pages = $this->countPages($output);
+            if ($options->maxPages > 0 && $pages > $options->maxPages) {
+                $dump = $this->maybeDumpDebugHtml($prepared, $options, 'max-pages');
+                $hint = $dump !== null ? " HTML dump: {$dump}" : '';
+
+                throw new RenderException(
+                    "InkPDF produced {$pages} pages (max allowed: {$options->maxPages}). "
+                    .'This usually means a layout loop (min-height:297mm, page-break-after:always, or a bad image).'
+                    .$hint
+                );
+            }
+
             return $output;
         } catch (RenderException $e) {
+            if ($options->debug && ! str_contains($e->getMessage(), 'HTML dump:')) {
+                $dump = $this->maybeDumpDebugHtml($prepared, $options, 'error');
+                if ($dump !== null) {
+                    throw new RenderException($e->getMessage().' HTML dump: '.$dump, previous: $e);
+                }
+            }
+
             throw $e;
         } catch (MpdfException $e) {
-            throw new RenderException('Failed to render PDF: ' . $e->getMessage(), previous: $e);
+            $dump = $this->maybeDumpDebugHtml($prepared, $options, 'mpdf');
+            $hint = $dump !== null ? ' HTML dump: '.$dump : '';
+
+            throw new RenderException('Failed to render PDF: '.$e->getMessage().$hint, previous: $e);
         } catch (\Throwable $e) {
-            throw new RenderException('Unexpected PDF render failure: ' . $e->getMessage(), previous: $e);
+            $dump = $this->maybeDumpDebugHtml($prepared, $options, 'unexpected');
+            $hint = $dump !== null ? ' HTML dump: '.$dump : '';
+
+            throw new RenderException('Unexpected PDF render failure: '.$e->getMessage().$hint, previous: $e);
         }
+    }
+
+    /**
+     * Drop remote / SVG images; ensure remaining imgs have numeric width & height.
+     */
+    private function sanitiseImages(string $html): string
+    {
+        $html = (string) preg_replace(
+            '/<img\b[^>]*\bsrc=(["\'])https?:\/\/[^"\']+\1[^>]*>/i',
+            '',
+            $html
+        );
+
+        $html = (string) preg_replace(
+            '/<img\b[^>]*\bsrc=(["\'])data:image\/svg\+xml[^"\']*\1[^>]*>/i',
+            '',
+            $html
+        );
+
+        // Strip exotic data URIs (only png/jpeg/gif/webp allowed — webp often fails in mPDF)
+        $html = (string) preg_replace_callback(
+            '/<img\b([^>]*)\bsrc=(["\'])(data:image\/([^;"\']+))[^"\']*\2([^>]*)>/i',
+            static function (array $m): string {
+                $type = strtolower($m[4]);
+                if (! in_array($type, ['png', 'jpeg', 'jpg', 'gif'], true)) {
+                    return '';
+                }
+
+                return '<img'.$m[1].'src='.$m[2].$m[3].$m[2].$m[5].'>';
+            },
+            $html
+        );
+
+        return (string) preg_replace_callback(
+            '/<img\b([^>]*)>/i',
+            static function (array $m): string {
+                $attrs = $m[1];
+                if (preg_match('/\bwidth\s*=\s*(["\']?)\d+\1/i', $attrs) !== 1) {
+                    $attrs .= ' width="160"';
+                }
+                if (preg_match('/\bheight\s*=\s*(["\']?)\d+\1/i', $attrs) !== 1) {
+                    $attrs .= ' height="60"';
+                }
+
+                return '<img'.$attrs.'>';
+            },
+            $html
+        );
+    }
+
+    private function countPages(string $pdf): int
+    {
+        if (preg_match_all('/\/Type\s*\/Page\b/', $pdf, $matches)) {
+            return count($matches[0]);
+        }
+
+        return 1;
+    }
+
+    private function maybeDumpDebugHtml(string $html, DocumentOptions $options, string $tag): ?string
+    {
+        // Dump when debug is on, or always for max-pages so the guard is actionable.
+        if (! $options->debug && $tag !== 'max-pages') {
+            return null;
+        }
+
+        $dir = $options->debugPath !== '' ? $options->debugPath : ($options->tempDir.DIRECTORY_SEPARATOR.'debug');
+        if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
+            return null;
+        }
+
+        $path = $dir.DIRECTORY_SEPARATOR.'inkpdf-'.date('Ymd-His').'-'.$tag.'.html';
+        if (@file_put_contents($path, $html) === false) {
+            return null;
+        }
+
+        return $path;
     }
 
     /**
@@ -123,12 +225,8 @@ final class MpdfRenderer implements PdfRenderer
             'fontdata' => $fontData + $defaultFontConfig['fontdata'],
             'useSubstitutions' => true,
             'simpleTables' => false,
-            // packTableData=true stores cells as packed ints; mPDF then does $cell['borderbin']
-            // on an int under PHP 8+ → "Trying to access array offset on int" (Laravel = 500).
             'packTableData' => false,
-            // 0 = never shrink tables (shrink loops can create blank pages)
             'shrink_tables_to_fit' => 0,
-            // keep-with-table can page-break-loop on complex float/table hybrids
             'use_kwt' => false,
             'autoLangToFont' => false,
             'autoScriptToLang' => false,
@@ -138,8 +236,6 @@ final class MpdfRenderer implements PdfRenderer
     }
 
     /**
-     * Always register bundled Inter unless the caller already defined that family.
-     *
      * @param  list<FontFace>  $fonts
      * @return list<FontFace>
      */

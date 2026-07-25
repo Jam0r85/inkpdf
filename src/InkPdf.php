@@ -35,6 +35,21 @@ final class InkPdf
     }
 
     /**
+     * Laravel helper: render a Blade view to a configured PdfDocument (requires the service provider).
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $options
+     */
+    public static function view(string $view, array $data = [], array $options = []): PdfDocument
+    {
+        if (! class_exists(\InkPdf\Laravel\InkPdfServiceProvider::class)) {
+            throw new \RuntimeException('InkPdf::view() requires the Laravel bridge.');
+        }
+
+        return \InkPdf\Laravel\InkPdfServiceProvider::documentFromView($view, $data, $options);
+    }
+
+    /**
      * Start a new document from an HTML file path.
      */
     public static function loadFile(string $path, ?PdfRenderer $renderer = null): PdfDocument

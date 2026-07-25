@@ -40,9 +40,21 @@ final class DocumentOptions
         public bool $normalizeCss = true,
         public array $stylesheets = [],
         public ?array $brand = null,
+        /**
+         * Abort when page count exceeds this (layout-loop guard).
+         * 0 = disabled.
+         */
+        public int $maxPages = 100,
+        /** Write HTML dump on failure when true. */
+        public bool $debug = false,
+        /** Directory for HTML dumps (created if missing). */
+        public string $debugPath = '',
     ) {
         if ($this->tempDir === '') {
             $this->tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'inkpdf';
+        }
+        if ($this->debugPath === '') {
+            $this->debugPath = $this->tempDir . DIRECTORY_SEPARATOR . 'debug';
         }
     }
 
@@ -159,6 +171,25 @@ final class DocumentOptions
         $clone = clone $this;
         $clone->brand = $brand;
         $clone->useDocumentStyles = true;
+
+        return $clone;
+    }
+
+    public function withMaxPages(int $maxPages): self
+    {
+        $clone = clone $this;
+        $clone->maxPages = max(0, $maxPages);
+
+        return $clone;
+    }
+
+    public function withDebug(bool $enabled = true, ?string $path = null): self
+    {
+        $clone = clone $this;
+        $clone->debug = $enabled;
+        if ($path !== null && $path !== '') {
+            $clone->debugPath = $path;
+        }
 
         return $clone;
     }

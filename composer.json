@@ -40,6 +40,13 @@
             "InkPdf\\Tests\\": "tests/"
         }
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "InkPdf\\Laravel\\InkPdfServiceProvider"
+            ]
+        }
+    },
     "scripts": {
         "test": "phpunit",
         "example:invoice": "php examples/generate-invoice.php",

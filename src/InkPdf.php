@@ -16,7 +16,7 @@ use InkPdf\Renderer\MpdfRenderer;
  *
  * $pdf = InkPdf::loadHtml($html)
  *     ->setPaper('A4')
- *     ->setDefaultFont('DejaVu Sans')
+ *     ->setDefaultFont('Inter') // bundled default
  *     ->addFont('Brand', __DIR__.'/fonts/Brand-Regular.ttf')
  *     ->addFont('Brand', __DIR__.'/fonts/Brand-Bold.ttf', weight: 'bold')
  *     ->setMeta(title: 'Invoice INV-1001')
@@ -27,6 +27,7 @@ final class InkPdf
 {
     /**
      * Start a new document from an HTML string.
+     * Default typeface is bundled Inter (SIL OFL).
      */
     public static function loadHtml(string $html, ?PdfRenderer $renderer = null): PdfDocument
     {

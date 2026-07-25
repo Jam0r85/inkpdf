@@ -12,7 +12,7 @@ $outFile = dirname(__DIR__) . '/examples/output/invoice-INV-1001.pdf';
 $path = InkPdf::loadFile($template)
     ->setPaper('A4')
     ->setMargins(14)
-    ->setDefaultFont('DejaVu Sans', 10)
+    ->setDefaultFont('Inter', 10)
     ->withDocumentStyles()
     ->withBrand(['ink' => '0f172a', 'primary' => '1d4ed8'])
     ->setMeta(

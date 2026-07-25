@@ -12,7 +12,7 @@ $outFile = dirname(__DIR__) . '/examples/output/payment-advice-PA-2044.pdf';
 $path = InkPdf::loadFile($template)
     ->setPaper('A4')
     ->setMargins(14)
-    ->setDefaultFont('DejaVu Sans', 10)
+    ->setDefaultFont('Inter', 10)
     ->withDocumentStyles()
     ->setMeta(
         title: 'Payment advice PA-2044',

@@ -10,6 +10,7 @@ use InkPdf\Css\HtmlStyler;
 use InkPdf\DocumentOptions;
 use InkPdf\Exceptions\RenderException;
 use InkPdf\FontFace;
+use InkPdf\Fonts\BundledFonts;
 use Mpdf\Config\ConfigVariables;
 use Mpdf\Config\FontVariables;
 use Mpdf\Mpdf;
@@ -94,7 +95,8 @@ final class MpdfRenderer implements PdfRenderer
             throw new RenderException("Unable to create temp directory: {$options->tempDir}");
         }
 
-        [$fontDirs, $fontData] = $this->buildFontConfig($options->fonts);
+        $fonts = $this->mergeBundledFonts($options->fonts);
+        [$fontDirs, $fontData] = $this->buildFontConfig($fonts);
 
         $defaultConfig = (new ConfigVariables())->getDefaults();
         $defaultFontConfig = (new FontVariables())->getDefaults();
@@ -110,12 +112,15 @@ final class MpdfRenderer implements PdfRenderer
             'margin_header' => 8,
             'margin_footer' => 8,
             'tempDir' => $options->tempDir,
-            'default_font' => $this->normaliseDefaultFont($options->defaultFont, $options->fonts),
+            'default_font' => $this->resolveDefaultFont($options->defaultFont, $fonts),
             'default_font_size' => $options->defaultFontSize,
             'showImageErrors' => $options->showImageErrors,
-            'fontDir' => array_merge($defaultConfig['fontDir'], $fontDirs),
+            'fontDir' => array_values(array_unique(array_merge(
+                $defaultConfig['fontDir'],
+                $fontDirs,
+                [BundledFonts::directory()],
+            ))),
             'fontdata' => $fontData + $defaultFontConfig['fontdata'],
-            // Slightly better CSS/layout defaults for documents
             'useSubstitutions' => true,
             'simpleTables' => false,
             'packTableData' => true,
@@ -126,6 +131,29 @@ final class MpdfRenderer implements PdfRenderer
         ];
 
         return new Mpdf($config);
+    }
+
+    /**
+     * Always register bundled Inter unless the caller already defined that family.
+     *
+     * @param  list<FontFace>  $fonts
+     * @return list<FontFace>
+     */
+    private function mergeBundledFonts(array $fonts): array
+    {
+        $hasInter = false;
+        foreach ($fonts as $font) {
+            if (strcasecmp($font->family, 'Inter') === 0) {
+                $hasInter = true;
+                break;
+            }
+        }
+
+        if (! $hasInter && BundledFonts::interAvailable()) {
+            $fonts = array_merge(BundledFonts::inter(), $fonts);
+        }
+
+        return $fonts;
     }
 
     /**
@@ -160,9 +188,13 @@ final class MpdfRenderer implements PdfRenderer
     /**
      * @param  list<FontFace>  $fonts
      */
-    private function normaliseDefaultFont(string $defaultFont, array $fonts): string
+    private function resolveDefaultFont(string $defaultFont, array $fonts): string
     {
         $normalised = strtolower(preg_replace('/\s+/', '', $defaultFont) ?? $defaultFont);
+
+        if ($normalised === '' || $normalised === 'inter') {
+            return BundledFonts::interAvailable() ? 'inter' : 'dejavusans';
+        }
 
         foreach ($fonts as $font) {
             if (strcasecmp($font->family, $defaultFont) === 0 || $font->mpdfFamily() === $normalised) {

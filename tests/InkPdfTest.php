@@ -28,7 +28,6 @@ final class InkPdfTest extends TestCase
 
         $pdf = InkPdf::loadHtml($html)
             ->setPaper(PaperSize::A4)
-            ->setDefaultFont('DejaVu Sans')
             ->setMeta(title: 'Test')
             ->output();
 
@@ -44,7 +43,6 @@ final class InkPdfTest extends TestCase
         $saved = InkPdf::loadFile($template)
             ->setPaper('A4', 'portrait')
             ->setMargins(['top' => 12, 'right' => 12, 'bottom' => 12, 'left' => 12])
-            ->setDefaultFont('DejaVu Sans', 10)
             ->withDocumentStyles()
             ->withBrand(['ink' => '0f172a'])
             ->save($path);

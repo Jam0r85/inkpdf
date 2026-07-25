@@ -75,7 +75,7 @@ $html = view('pdf.invoice', compact('invoice'))->render(); // Laravel
 $pdf = InkPdf::loadHtml($html)
     ->setPaper('A4')
     ->setMargins(12)
-    ->setDefaultFont('DejaVu Sans', 10)
+    // Inter is the default — no need to setDefaultFont unless you want something else
     ->setMeta(title: 'Invoice INV-1001', author: 'PropDesk')
     ->addFont('Brand', resource_path('fonts/Brand-Regular.ttf'))
     ->addFont('Brand', resource_path('fonts/Brand-Bold.ttf'), weight: 'bold');
@@ -102,23 +102,30 @@ return response($pdf->output(), 200, [
 
 ## Fonts
 
-mPDF ships **DejaVu** by default (good Unicode coverage). Register company fonts:
+### Inter (default)
+
+InkPDF **bundles Inter** (Regular, Bold, Italic, Bold Italic) under the SIL Open Font License and uses it as the default typeface. No setup required:
+
+```php
+InkPdf::loadHtml($html)->output(); // Inter
+```
+
+In CSS:
+
+```css
+body { font-family: Inter, DejaVu Sans, sans-serif; }
+h1, th, .font-bold { font-weight: bold; }
+```
+
+mPDF’s **DejaVu** remains available as a fallback (`->setDefaultFont('DejaVu Sans')`).
+
+### Custom / brand fonts
 
 ```php
 InkPdf::loadHtml($html)
-    ->addFont('Inter', __DIR__.'/fonts/Inter-Regular.ttf')
-    ->addFont('Inter', __DIR__.'/fonts/Inter-Bold.ttf', weight: 'bold')
-    ->addFont('Inter', __DIR__.'/fonts/Inter-Italic.ttf', style: 'italic')
-    ->setDefaultFont('Inter');
-```
-
-In CSS / HTML:
-
-```html
-<style>
-  body { font-family: Inter, DejaVu Sans, sans-serif; font-size: 10pt; }
-  h1, th, .bold { font-weight: bold; }
-</style>
+    ->addFont('Brand', __DIR__.'/fonts/Brand-Regular.ttf')
+    ->addFont('Brand', __DIR__.'/fonts/Brand-Bold.ttf', weight: 'bold')
+    ->setDefaultFont('Brand');
 ```
 
 Supported files: `.ttf`, `.otf`, `.ttc`.
@@ -253,7 +260,7 @@ final class DocumentPdf
     {
         return InkPdf::loadHtml($html)
             ->setPaper('A4')
-            ->setDefaultFont('DejaVu Sans')
+            ->withDocumentStyles()
             ->setMeta(title: "Invoice {$number}", author: 'PropDesk')
             ->output();
     }

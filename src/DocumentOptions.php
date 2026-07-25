@@ -24,7 +24,7 @@ final class DocumentOptions
             'bottom' => 15.0,
             'left' => 15.0,
         ],
-        public string $defaultFont = 'dejavusans',
+        public string $defaultFont = 'Inter',
         public float $defaultFontSize = 10.0,
         public string $tempDir = '',
         public array $fonts = [],

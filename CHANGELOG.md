@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] — 2026-09-27
+
+### Fixed
+- `<img>` data URIs lost their data: the image sanitiser kept only `data:image/jpeg` and
+  dropped the base64, so embedded PNG/JPEG/GIF photos never rendered. Allowed images now pass
+  through untouched.
+- Large embedded photos silently blanked the whole document: the sanitiser's regexes ran past
+  `pcre.backtrack_limit`, and a failed `preg_replace` was cast to an empty string. Images are
+  now sanitised in one linear pass, and a regex failure throws a `RenderException`.
+- mPDF refused HTML longer than `pcre.backtrack_limit` (1MB by default), which a few photos
+  exceed. The limit is raised for the duration of `WriteHTML()` only and then restored.
+
 ## [1.0.0] — 2026-07-25
 
 First stable release. Public API: `InkPdf::loadHtml` / `loadFile` / `view`, fluent

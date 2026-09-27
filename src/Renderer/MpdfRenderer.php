@@ -51,7 +51,21 @@ final class MpdfRenderer implements PdfRenderer
                 $mpdf->SetSubject($options->subject);
             }
 
-            $mpdf->WriteHTML($prepared);
+            // mPDF refuses HTML longer than pcre.backtrack_limit; embedded photos easily pass the
+            // 1MB default. Raise it for this render only.
+            $backtrackLimit = ini_get('pcre.backtrack_limit');
+            $needed = max(1_000_000, strlen($prepared) * 2);
+            if ($backtrackLimit !== false && (int) $backtrackLimit < $needed) {
+                ini_set('pcre.backtrack_limit', (string) $needed);
+            }
+
+            try {
+                $mpdf->WriteHTML($prepared);
+            } finally {
+                if ($backtrackLimit !== false) {
+                    ini_set('pcre.backtrack_limit', $backtrackLimit);
+                }
+            }
 
             $output = $mpdf->Output('', Destination::STRING_RETURN);
             if (! is_string($output) || $output === '') {
@@ -95,50 +109,93 @@ final class MpdfRenderer implements PdfRenderer
 
     /**
      * Drop remote / SVG images; ensure remaining imgs have numeric width & height.
+     *
+     * One linear pass over the <img> tags: `[^>]*` can't overrun a tag, and the src is read with
+     * strpos rather than a regex, so a large base64 photo never runs into pcre.backtrack_limit.
      */
     private function sanitiseImages(string $html): string
     {
-        $html = (string) preg_replace(
-            '/<img\b[^>]*\bsrc=(["\'])https?:\/\/[^"\']+\1[^>]*>/i',
-            '',
-            $html
-        );
+        return $this->replaceCallback(
+            '/<img\b[^>]*>/i',
+            function (array $m): string {
+                $tag = $m[0];
+                [$src, $rest] = $this->splitSrc($tag);
 
-        $html = (string) preg_replace(
-            '/<img\b[^>]*\bsrc=(["\'])data:image\/svg\+xml[^"\']*\1[^>]*>/i',
-            '',
-            $html
-        );
-
-        // Strip exotic data URIs (only png/jpeg/gif/webp allowed — webp often fails in mPDF)
-        $html = (string) preg_replace_callback(
-            '/<img\b([^>]*)\bsrc=(["\'])(data:image\/([^;"\']+))[^"\']*\2([^>]*)>/i',
-            static function (array $m): string {
-                $type = strtolower($m[4]);
-                if (! in_array($type, ['png', 'jpeg', 'jpg', 'gif'], true)) {
+                if ($src !== null && ! $this->isAllowedImageSource($src)) {
                     return '';
                 }
 
-                return '<img'.$m[1].'src='.$m[2].$m[3].$m[2].$m[5].'>';
+                // Look for width/height outside the (possibly huge) src value.
+                $size = '';
+                if (preg_match('/\bwidth\s*=\s*(["\']?)\d+\1/i', $rest) !== 1) {
+                    $size .= ' width="160"';
+                }
+                if (preg_match('/\bheight\s*=\s*(["\']?)\d+\1/i', $rest) !== 1) {
+                    $size .= ' height="60"';
+                }
+
+                if ($size === '') {
+                    return $tag;
+                }
+
+                $close = str_ends_with($tag, '/>') ? -2 : -1;
+
+                return rtrim(substr($tag, 0, $close)).$size.substr($tag, $close);
             },
             $html
         );
+    }
 
-        return (string) preg_replace_callback(
-            '/<img\b([^>]*)>/i',
-            static function (array $m): string {
-                $attrs = $m[1];
-                if (preg_match('/\bwidth\s*=\s*(["\']?)\d+\1/i', $attrs) !== 1) {
-                    $attrs .= ' width="160"';
-                }
-                if (preg_match('/\bheight\s*=\s*(["\']?)\d+\1/i', $attrs) !== 1) {
-                    $attrs .= ' height="60"';
-                }
+    /**
+     * The tag's quoted src value, and the tag with that value taken out.
+     *
+     * @return array{0: string|null, 1: string}
+     */
+    private function splitSrc(string $tag): array
+    {
+        if (preg_match('/\ssrc\s*=\s*(["\'])/i', $tag, $m, PREG_OFFSET_CAPTURE) !== 1) {
+            return [null, $tag];
+        }
 
-                return '<img'.$attrs.'>';
-            },
-            $html
-        );
+        $quote = $m[1][0];
+        $start = $m[1][1] + 1;
+        $end = strpos($tag, $quote, $start);
+
+        if ($end === false) {
+            return [null, $tag];
+        }
+
+        return [substr($tag, $start, $end - $start), substr($tag, 0, $m[0][1]).substr($tag, $end + 1)];
+    }
+
+    /** Local files and png/jpeg/gif data URIs; never remote URLs, SVG or webp (often fails in mPDF). */
+    private function isAllowedImageSource(string $src): bool
+    {
+        $src = ltrim($src);
+
+        if (preg_match('#^https?://#i', $src) === 1) {
+            return false;
+        }
+
+        if (strncasecmp($src, 'data:', 5) !== 0) {
+            return true;
+        }
+
+        $type = strtolower(substr($src, 11, (int) strcspn($src, ';,', 11)));
+
+        return strncasecmp($src, 'data:image/', 11) === 0 && in_array($type, ['png', 'jpeg', 'jpg', 'gif'], true);
+    }
+
+    /** preg_replace_callback that fails loudly instead of silently emptying the document. */
+    private function replaceCallback(string $pattern, callable $callback, string $html): string
+    {
+        $result = preg_replace_callback($pattern, $callback, $html);
+
+        if ($result === null) {
+            throw new RenderException('InkPDF could not process the HTML images: '.preg_last_error_msg().'.');
+        }
+
+        return $result;
     }
 
     private function countPages(string $pdf): int

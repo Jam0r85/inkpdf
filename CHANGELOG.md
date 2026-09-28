@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] — 2026-09-28
+
+### Security
+- Nothing in a rendered document is fetched from the network any more. mPDF now reads
+  resources through `LocalOnlyContentLoader` (data URIs and plain local paths only), and its HTTP
+  client, `NoRemoteHttpClient`, never makes a request. `<link>` tags are stripped before
+  rendering. Before this, `<link href>`, CSS `url()`/`@import` and protocol-relative
+  `<img src="//host">` made the server request any address (SSRF).
+- `<img>` sources may only be local paths or png/jpeg/gif data URIs. `//host`, `file:`,
+  `ftp:`, `phar:` and every other scheme are dropped, not just `http(s)://`.
+- The HTML dump is only written when debug is on. Before this it was always written for the
+  max-pages guard, and in Laravel apps `setDebugPath()` (which the service provider always
+  calls) silently turned debug on, so every failed render dumped the document's contents
+  under `storage/logs/inkpdf`. `setDebugPath()` now only sets the path.
+
 ## [1.0.4] — 2026-09-27
 
 ### Fixed

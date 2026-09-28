@@ -13,6 +13,7 @@ use InkPdf\FontFace;
 use InkPdf\Fonts\BundledFonts;
 use Mpdf\Config\ConfigVariables;
 use Mpdf\Config\FontVariables;
+use Mpdf\Container\SimpleContainer;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use Mpdf\Output\Destination;
@@ -37,7 +38,7 @@ final class MpdfRenderer implements PdfRenderer
                 $this->collectStylesheets($options),
                 $options->normalizeCss,
             );
-            $prepared = $this->sanitiseImages($prepared);
+            $prepared = $this->sanitiseImages($this->stripLinkedResources($prepared));
 
             $mpdf = $this->createMpdf($options);
 
@@ -168,22 +169,36 @@ final class MpdfRenderer implements PdfRenderer
         return [substr($tag, $start, $end - $start), substr($tag, 0, $m[0][1]).substr($tag, $end + 1)];
     }
 
-    /** Local files and png/jpeg/gif data URIs; never remote URLs, SVG or webp (often fails in mPDF). */
+    /**
+     * Local file paths and png/jpeg/gif data URIs. Never a URL of any kind (`http:`, `//host`,
+     * `file:`, `ftp:`…), SVG or webp (often fails in mPDF).
+     */
     private function isAllowedImageSource(string $src): bool
     {
         $src = ltrim($src);
 
-        if (preg_match('#^https?://#i', $src) === 1) {
-            return false;
-        }
-
         if (strncasecmp($src, 'data:', 5) !== 0) {
-            return true;
+            return LocalOnlyContentLoader::isLocalPath($src);
         }
 
         $type = strtolower(substr($src, 11, (int) strcspn($src, ';,', 11)));
 
         return strncasecmp($src, 'data:image/', 11) === 0 && in_array($type, ['png', 'jpeg', 'jpg', 'gif'], true);
+    }
+
+    /**
+     * `<link>` tags go: a stylesheet or anything else they point at is a fetch. Styles come from
+     * the document's own `<style>` blocks and the stylesheets the app passes.
+     */
+    private function stripLinkedResources(string $html): string
+    {
+        $result = preg_replace('/<link\b[^>]*>/i', '', $html);
+
+        if ($result === null) {
+            throw new RenderException('InkPDF could not process the HTML links: '.preg_last_error_msg().'.');
+        }
+
+        return $result;
     }
 
     /** preg_replace_callback that fails loudly instead of silently emptying the document. */
@@ -209,8 +224,9 @@ final class MpdfRenderer implements PdfRenderer
 
     private function maybeDumpDebugHtml(string $html, DocumentOptions $options, string $tag): ?string
     {
-        // Dump when debug is on, or always for max-pages so the guard is actionable.
-        if (! $options->debug && $tag !== 'max-pages') {
+        // The HTML holds whatever the document does (names, addresses, bank details), so it is
+        // only ever written to disk when debug is on.
+        if (! $options->debug) {
             return null;
         }
 
@@ -289,7 +305,11 @@ final class MpdfRenderer implements PdfRenderer
             'autoScriptToLang' => false,
         ];
 
-        return new Mpdf($config);
+        // Nothing in the document may make mPDF fetch a resource: data URIs and local paths only.
+        return new Mpdf($config, new SimpleContainer([
+            'localContentLoader' => new LocalOnlyContentLoader(),
+            'httpClient' => new NoRemoteHttpClient(),
+        ]));
     }
 
     /**

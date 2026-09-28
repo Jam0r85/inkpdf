@@ -131,9 +131,13 @@ final class PdfDocument
         return $this;
     }
 
+    /**
+     * Where debug dumps go. It doesn't turn debug on: the dump holds the document's contents,
+     * so it is only written when {@see setDebug()} is on.
+     */
     public function setDebugPath(string $path): self
     {
-        $this->options = $this->options->withDebug(true, $path);
+        $this->options = $this->options->withDebug($this->options->debug, $path);
 
         return $this;
     }

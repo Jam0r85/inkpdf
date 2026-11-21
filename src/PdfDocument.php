@@ -241,7 +241,7 @@ final class PdfDocument
         $pdf = $this->output();
         $dir = dirname($path);
 
-        if (! is_dir($dir) && ! mkdir($dir, 0775, true) && ! is_dir($dir)) {
+        if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
             throw new InkPdfException("Unable to create directory: {$dir}");
         }
 

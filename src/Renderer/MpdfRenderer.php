@@ -23,6 +23,9 @@ use Mpdf\Output\Destination;
  */
 final class MpdfRenderer implements PdfRenderer
 {
+    /** @var array<string, true> Process cache folders this process has set up (never request state). */
+    private static array $cleanedUp = [];
+
     public function __construct(
         private readonly HtmlStyler $styler = new HtmlStyler(),
     ) {
@@ -264,18 +267,70 @@ final class MpdfRenderer implements PdfRenderer
         return $sheets;
     }
 
-    private function createMpdf(DocumentOptions $options): Mpdf
+    /**
+     * Each process gets its own cache folder under the temp dir: parallel workers sharing one would
+     * race both creating the folders and reading a font cache another is still writing. The folder
+     * is removed when the process ends, and one left by a process that was killed is removed by the
+     * next process to start.
+     */
+    private function processTempDir(string $root): string
     {
-        // Each process gets its own cache folder under the temp dir: parallel workers sharing one
-        // would race both creating the folders and reading a font cache file another is writing.
+        $pid = (int) getmypid();
+        $dir = $root.DIRECTORY_SEPARATOR.'pid-'.$pid;
+        $first = ! isset(self::$cleanedUp[$dir]);
+
         // mPDF makes tempDir/mpdf and tempDir/mpdf/ttfontdata with a bare mkdir() that warns when
         // the folder already exists, so they are made here, tolerating that.
-        $tempDir = $options->tempDir.DIRECTORY_SEPARATOR.'pid-'.getmypid();
-        foreach ([$options->tempDir, $tempDir, $tempDir.'/mpdf', $tempDir.'/mpdf/ttfontdata'] as $dir) {
-            if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
-                throw new RenderException("Unable to create temp directory: {$dir}");
+        foreach ([$root, $dir, $dir.'/mpdf', $dir.'/mpdf/ttfontdata'] as $path) {
+            if (! is_dir($path) && ! @mkdir($path, 0775, true) && ! is_dir($path)) {
+                throw new RenderException("Unable to create temp directory: {$path}");
             }
         }
+
+        if ($first) {
+            self::$cleanedUp[$dir] = true;
+            register_shutdown_function(static function () use ($dir, $pid): void {
+                // A forked child inherits this; only the process that made the folder removes it.
+                if (getmypid() === $pid) {
+                    self::removeDir($dir);
+                }
+            });
+            $this->removeDeadProcessDirs($root);
+        }
+
+        return $dir;
+    }
+
+    private function removeDeadProcessDirs(string $root): void
+    {
+        if (! function_exists('posix_kill') || ! function_exists('posix_get_last_error')) {
+            return;
+        }
+
+        foreach (glob($root.DIRECTORY_SEPARATOR.'pid-*', GLOB_ONLYDIR) ?: [] as $dir) {
+            $pid = (int) substr(basename($dir), 4);
+            // ESRCH (3): no such process. Anything else (it runs, or is another user's) is kept.
+            if ($pid > 0 && ! @posix_kill($pid, 0) && posix_get_last_error() === 3) {
+                self::removeDir($dir);
+            }
+        }
+    }
+
+    private static function removeDir(string $dir): void
+    {
+        foreach (@scandir($dir) ?: [] as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            $path = $dir.DIRECTORY_SEPARATOR.$item;
+            is_dir($path) && ! is_link($path) ? self::removeDir($path) : @unlink($path);
+        }
+        @rmdir($dir);
+    }
+
+    private function createMpdf(DocumentOptions $options): Mpdf
+    {
+        $tempDir = $this->processTempDir($options->tempDir);
 
         $fonts = $this->mergeBundledFonts($options->fonts);
         [$fontDirs, $fontData] = $this->buildFontConfig($fonts);

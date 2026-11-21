@@ -266,8 +266,15 @@ final class MpdfRenderer implements PdfRenderer
 
     private function createMpdf(DocumentOptions $options): Mpdf
     {
-        if (! is_dir($options->tempDir) && ! mkdir($options->tempDir, 0775, true) && ! is_dir($options->tempDir)) {
-            throw new RenderException("Unable to create temp directory: {$options->tempDir}");
+        // Each process gets its own cache folder under the temp dir: parallel workers sharing one
+        // would race both creating the folders and reading a font cache file another is writing.
+        // mPDF makes tempDir/mpdf and tempDir/mpdf/ttfontdata with a bare mkdir() that warns when
+        // the folder already exists, so they are made here, tolerating that.
+        $tempDir = $options->tempDir.DIRECTORY_SEPARATOR.'pid-'.getmypid();
+        foreach ([$options->tempDir, $tempDir, $tempDir.'/mpdf', $tempDir.'/mpdf/ttfontdata'] as $dir) {
+            if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
+                throw new RenderException("Unable to create temp directory: {$dir}");
+            }
         }
 
         $fonts = $this->mergeBundledFonts($options->fonts);
@@ -286,7 +293,7 @@ final class MpdfRenderer implements PdfRenderer
             'margin_bottom' => $options->marginsMm['bottom'],
             'margin_header' => $options->marginHeaderMm,
             'margin_footer' => $options->marginFooterMm,
-            'tempDir' => $options->tempDir,
+            'tempDir' => $tempDir,
             'default_font' => $this->resolveDefaultFont($options->defaultFont, $fonts),
             'default_font_size' => $options->defaultFontSize,
             'showImageErrors' => $options->showImageErrors,

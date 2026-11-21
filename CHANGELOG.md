@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] — 2026-11-21
+
+### Fixed
+- The per-process cache folder (`tempDir/pid-<pid>`, new in 1.0.6) is removed when its process
+  ends, and one left by a killed process is removed by the next process to render (needs
+  ext-posix; without it such a folder stays). Before this they piled up, one per process.
+
+## [1.0.6] — 2026-11-21
+
+### Fixed
+- Parallel renders (queue workers, `artisan test --parallel`) no longer fail on a shared temp
+  folder: two processes creating it at once made `mkdir()` warn "File exists", and one could read
+  a font cache another was still writing (`Undefined variable $cw`). Each process now caches
+  under `tempDir/pid-<pid>`. `save()` tolerates the same race on its target folder.
+
 ## [1.0.5] — 2026-09-28
 
 ### Security

@@ -46,10 +46,38 @@ PHP;
                     $err = stream_get_contents($pipes[$i][2]);
                     $this->assertSame(0, proc_close($p), "Render failed while racing: {$err}");
                 }
+                $this->assertSame([], glob($dir.'/pid-*') ?: [], 'A finished process left its cache folder behind.');
                 $this->removeDir($dir);
             }
         } finally {
             @unlink($file);
+        }
+    }
+
+    public function test_a_folder_left_by_a_killed_process_is_removed_by_the_next_render(): void
+    {
+        if (! function_exists('posix_kill')) {
+            $this->markTestSkipped('Needs ext-posix.');
+        }
+
+        // A process that has ended: its pid is free (for long enough to run this).
+        $dead = proc_open([PHP_BINARY, '-r', 'exit(0);'], [], $pipes);
+        $deadPid = proc_get_status($dead)['pid'];
+        proc_close($dead);
+
+        $dir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'inkpdf-stale-'.bin2hex(random_bytes(4));
+        mkdir($dir.'/pid-'.$deadPid.'/mpdf/ttfontdata', 0775, true);
+        file_put_contents($dir.'/pid-'.$deadPid.'/mpdf/ttfontdata/x.dat', 'x');
+        mkdir($dir.'/pid-'.getmypid().'-not-ours', 0775, true);
+
+        try {
+            $pdf = \InkPdf\InkPdf::loadHtml('<p>x</p>')->setTempDir($dir)->output();
+
+            $this->assertStringStartsWith('%PDF', $pdf);
+            $this->assertDirectoryDoesNotExist($dir.'/pid-'.$deadPid);
+            $this->assertDirectoryExists($dir.'/pid-'.getmypid(), 'A running process keeps its folder.');
+        } finally {
+            $this->removeDir($dir);
         }
     }
 
